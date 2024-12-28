@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Control;
 use App\Models\Data;
 use App\Models\Device;
 use Illuminate\Http\Request;
@@ -41,7 +42,8 @@ class DataController extends Controller
             'suhu' => $request->suhu
         ]);
 
-        return $this->responses(true, 'Berhasil menambahkan data');
+        $data = Control::where('id_device', $id_device)->get();
+        return $this->responses(true, 'Berhasil menambahkan data', $data);
     }
 
     function list(Request $request){

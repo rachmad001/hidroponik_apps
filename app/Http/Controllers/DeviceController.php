@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Control;
 use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -10,7 +11,8 @@ use Illuminate\Support\Str;
 class DeviceController extends Controller
 {
     //
-    function create(Request $request){
+    function create(Request $request)
+    {
         // \Log::info($request->all());
         $validator = Validator::make($request->all(), [
             'nama' => 'required',
@@ -18,7 +20,7 @@ class DeviceController extends Controller
             'id_user' => 'required'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response($this->responses(false, implode(",", $validator->messages()->all())), 400);
         }
 
@@ -30,10 +32,20 @@ class DeviceController extends Controller
             'id_user' => $request->id_user
         ]);
 
+        $default_control = Control::create([
+            'id_device' => $inserts->id,
+            'ph_up' => 0,
+            'ph_down' => 0,
+            'nutrisi' => 0,
+            'heater' => 0,
+            'pump_mix' => 0
+        ]);
+
         return $this->responses(true, 'Berhasil menambahkan data');
     }
 
-    function edit(Request $request){
+    function edit(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'security_key' => 'required',
             'nama' => 'required',
@@ -41,16 +53,16 @@ class DeviceController extends Controller
             'id_user' => 'required'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response($this->responses(false, implode(",", $validator->messages()->all())), 400);
         }
 
         //check valid security_key
         $find_device = Device::where('security_key', $request->security_key);
-        if($find_device->count() == 0){
+        if ($find_device->count() == 0) {
             return response($this->responses(false, 'Device tidak ditemukan'), 404);
         }
-        if($find_device->where('id_user', $request->id_user)->count() == 0){
+        if ($find_device->where('id_user', $request->id_user)->count() == 0) {
             return response($this->responses(false, 'Tidak memiliki akses'), 403);
         }
 
@@ -62,40 +74,42 @@ class DeviceController extends Controller
         return $this->responses(true, 'Berhasil memperbarui data');
     }
 
-    function delete(Request $request){
+    function delete(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'security_key' => 'required',
             'id_user' => 'required'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response($this->responses(false, implode(",", $validator->messages()->all())), 400);
         }
 
         //check valid security_key
         $find_device = Device::where('security_key', $request->security_key);
-        if($find_device->count() == 0){
+        if ($find_device->count() == 0) {
             return response($this->responses(false, 'Device tidak ditemukan'), 404);
         }
-        if($find_device->where('id_user', $request->id_user)->count() == 0){
+        if ($find_device->where('id_user', $request->id_user)->count() == 0) {
             return response($this->responses(false, 'Tidak memiliki akses'), 403);
         }
 
         $deletes = Device::where('security_key', $request->security_key)->delete();
         return $this->responses(true, 'Berhasil menghapus data');
-
     }
 
-    function list(Request $request){
+    function list(Request $request)
+    {
         $id_user = $request->id_user;
         $devices = Device::where('id_user', $id_user)->get();
         return $this->responses(true, 'Berhasil mendapatkan data', $devices);
     }
 
-    function generate_security_key($id_user){
+    function generate_security_key($id_user)
+    {
         $security_key = Str::random(10);
         $find_device = Device::where('security_key', $security_key)->where('id_user', $id_user)->count();
-        if($find_device > 0){
+        if ($find_device > 0) {
             return $this->generate_security_key($id_user);
         }
         return $security_key;
